@@ -1,0 +1,210 @@
+{
+	"name": "pipeline1",
+	"properties": {
+		"activities": [
+			{
+				"name": "Get Metadata1",
+				"type": "GetMetadata",
+				"dependsOn": [
+					{
+						"activity": "Lookup1",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "get_metadata",
+						"type": "DatasetReference",
+						"parameters": {
+							"container": {
+								"value": "@activity('Lookup1').output.firstRow['container_source']",
+								"type": "Expression"
+							},
+							"url": {
+								"value": "@activity('Lookup1').output.firstRow['source_url']",
+								"type": "Expression"
+							},
+							"secretname": {
+								"value": "@activity('Lookup1').output.firstRow['source_secretname']",
+								"type": "Expression"
+							}
+						}
+					},
+					"fieldList": [
+						"childItems"
+					],
+					"storeSettings": {
+						"type": "AzureBlobFSReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false
+					},
+					"formatSettings": {
+						"type": "DelimitedTextReadSettings"
+					}
+				}
+			},
+			{
+				"name": "ForEach1",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Get Metadata1",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Get Metadata1').output.childItems",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "Copy data1",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "DelimitedTextSource",
+									"storeSettings": {
+										"type": "AzureBlobFSReadSettings",
+										"recursive": true,
+										"enablePartitionDiscovery": false
+									},
+									"formatSettings": {
+										"type": "DelimitedTextReadSettings"
+									}
+								},
+								"sink": {
+									"type": "DelimitedTextSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									},
+									"formatSettings": {
+										"type": "DelimitedTextWriteSettings",
+										"quoteAllText": true,
+										"fileExtension": ".txt"
+									}
+								},
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "source_dataset",
+									"type": "DatasetReference",
+									"parameters": {
+										"container": {
+											"value": "@activity('Lookup1').output.firstRow['container_source']",
+											"type": "Expression"
+										},
+										"filename": {
+											"value": "@item().name",
+											"type": "Expression"
+										},
+										"url": {
+											"value": "@activity('Lookup1').output.firstRow['source_url']",
+											"type": "Expression"
+										},
+										"secretname": {
+											"value": "@activity('Lookup1').output.firstRow['source_secretname']",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "sink_dataset",
+									"type": "DatasetReference",
+									"parameters": {
+										"container": {
+											"value": "@activity('Lookup1').output.firstRow['container_sink']",
+											"type": "Expression"
+										},
+										"filename": {
+											"value": "@item().name",
+											"type": "Expression"
+										},
+										"url": {
+											"value": "@activity('Lookup1').output.firstRow['sink_url']\n",
+											"type": "Expression"
+										},
+										"secretname": {
+											"value": "@activity('Lookup1').output.firstRow['sink_secretname']",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						}
+					]
+				}
+			},
+			{
+				"name": "Lookup1",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": {
+							"value": "SELECT * FROM dbo.config_csv\nWHERE instance = '@{pipeline().parameters.instance}'",
+							"type": "Expression"
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "AzureSqldataset",
+						"type": "DatasetReference"
+					}
+				}
+			}
+		],
+		"parameters": {
+			"instance": {
+				"type": "string",
+				"defaultValue": "ins1"
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2025-01-03T09:24:50Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

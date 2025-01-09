@@ -1,0 +1,9 @@
+{
+	"name": "4ar",
+	"location": "norwayeast",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "9323d395-0b63-4d6a-b65e-d50aaf9ec1ed",
+		"tenantId": "b8b16f98-ca9f-4f9b-9f3c-9b7988cdde94"
+	}
+}

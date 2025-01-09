@@ -1,0 +1,30 @@
+{
+	"name": "AzureDataLakeStorage4art",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"parameters": {
+			"url": {
+				"type": "string"
+			},
+			"secretname": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "AzureBlobFS",
+		"typeProperties": {
+			"url": "@{linkedService().url}",
+			"accountKey": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "KeyVaultLS",
+					"type": "LinkedServiceReference"
+				},
+				"secretName": {
+					"value": "@linkedService().secretname",
+					"type": "Expression"
+				}
+			}
+		}
+	}
+}
